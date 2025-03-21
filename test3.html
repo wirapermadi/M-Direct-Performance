@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f8f9fa;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 100%;
+            margin: auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .header-container {
+            display: flex;
+            flex-direction: column; /* Agar logo dan teks bertumpuk */
+            align-items: center; /* Memusatkan elemen ke tengah */
+            background-color: purple; /* Warna latar belakang */
+            color: white; /* Warna teks */
+            padding: 20px; /* Memberikan ruang di sekitar */
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .logo {
+            max-width: 180px; /* Ukuran maksimum logo */
+            height: auto; /* Menjaga aspek rasio */
+            margin-bottom: 10px; /* Jarak antara logo dan teks */
+        }
+
+        h2 {
+            color: white;
+            background-color: purple;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        .filter-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            padding: 15px;
+            background: #f1f1f1;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        input, select {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .reset-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        th {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        th {
+            background-color: #007bff;
+            color: white;
+        }
+ 
+        td {
+            border: 1px solid #ddd;
+            padding: 10px;
+            text-align: left;
+            font-size: 14px;
+        }
+
+        td:nth-child(n+6) {
+            text-align: center; 
+            vertical-align: middle; 
+        }
+
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        .highlight-yes {
+            color: rgb(0, 255, 76);
+            font-weight: bold;
+        }
+
+        .highlight-no {
+            color: rgb(255, 0, 0);
+            font-weight: bold;
+        }
+
+        @media (max-width: 768px) {
+            .logo {
+                width: 20vw; /* Ukuran logo lebih kecil */
+                max-width: 140px;
+            }
+
+            h2 {
+                font-size: 3vw; /* Ukuran teks lebih besar untuk keterbacaan */
+            }
+
+            .filter-container {
+                flex-direction: column;
+            }
+
+            input, select, .reset-btn {
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .logo {
+                width: 30vw; /* Ukuran lebih besar relatif terhadap layar kecil */
+                max-width: 120px;
+            }
+
+            h2 {
+                font-size: 4vw; /* Ukuran teks lebih besar agar tetap terbaca */
+            }
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>
+            <img src="img\logo_mdirect.png" alt="Bank Muamalat Logo" class="logo">
+        </h1>
+
+        <h2>Employee's M-Direct Performances</h2>
+
+        <div class="filter-container">
+            <input type="file" id="fileInput" accept=".xlsx, .xls">
+            <input type="text" id="searchBox" placeholder="Name or Marketing Code..." onkeyup="searchTable()">
+            <select id="positionFilter" onchange="filterTable()">
+                <option value="">All Position</option>
+                <option value="RM">RM</option>
+                <option value="CS">CS</option>
+                <option value="BM">BM</option>
+            </select>
+            <select id="branchFilter" onchange="filterTable()">
+                <option value="">All Branch</option>
+            </select>
+            <select id="periodeFilter" onchange="filterTable()">
+                <option value="">All Period</option>
+            </select>
+            <button class="reset-btn" onclick="resetFilter()">Reset</button>
+        </div>
+
+        <table id="dataTable">
+            <thead>
+                <tr id="tableHead"></tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+    </div>
+
+    <script>
+        let tableData = [];
+
+        document.getElementById('fileInput').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            const reader = new FileReader();
+
+            reader.onload = function(e) {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const sheet = workbook.Sheets[workbook.SheetNames[0]];
+                const jsonData = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+                populateTable(jsonData);
+            };
+
+            reader.readAsArrayBuffer(file);
+        });
+
+        function populateTable(data) {
+            const tableHead = document.getElementById('tableHead');
+            const tableBody = document.getElementById('tableBody');
+            const branchFilter = document.getElementById('branchFilter');
+            const periodeFilter = document.getElementById('periodeFilter');
+            tableHead.innerHTML = '';
+            tableBody.innerHTML = '';
+            tableData = [];
+            let branches = new Set();
+            let periods = new Set();
+
+            if (data.length > 0) {
+                data[0].forEach(header => {
+                    let th = document.createElement('th');
+                    th.textContent = header;
+                    tableHead.appendChild(th);
+                });
+
+                
+
+                data.slice(1).forEach(row => {
+                    let tr = document.createElement('tr');
+                    let rowData = {};
+                    row.forEach((cell, index) => {
+                        let td = document.createElement('td');
+                        td.textContent = cell;
+                        tr.appendChild(td);
+                        rowData[data[0][index]] = cell;
+                });
+
+                let lastCell = tr.cells[tr.cells.length - 1];
+                if (lastCell.textContent === "Y") {
+                    lastCell.classList.add("highlight-yes");
+                } else if (lastCell.textContent === "N") {
+                    lastCell.classList.add("highlight-no");
+                }
+                
+                    tableBody.appendChild(tr);
+                    tableData.push(rowData);
+                    branches.add(rowData['Main Branch']);
+                    periods.add(rowData['Periode']);
+                });
+            }
+            
+            branchFilter.innerHTML = '<option value="">Semua Branch</option>';
+            branches.forEach(branch => {
+                let option = document.createElement('option');
+                option.value = branch;
+                option.textContent = branch;
+                branchFilter.appendChild(option);
+            });
+
+            periodeFilter.innerHTML = '<option value="">Semua Periode</option>';
+            periods.forEach(period => {
+                let option = document.createElement('option');
+                option.value = period;
+                option.textContent = period;
+                periodeFilter.appendChild(option);
+            });
+        }
+
+        function filterAndSearchTable() {
+                const input = document.getElementById('searchBox').value.toLowerCase();
+            const position = document.getElementById('positionFilter').value;
+            const branch = document.getElementById('branchFilter').value;
+            const periode = document.getElementById('periodeFilter').value;
+            const rows = document.getElementById('tableBody').getElementsByTagName('tr');
+            for (let row of rows) {
+                    let nama = row.cells[2].textContent.toLowerCase();
+                    let marketingCode = row.cells[1].textContent.toLowerCase();
+                    let pos = row.cells[3].textContent;
+                    let br = row.cells[4].textContent;
+                    let per = row.cells[0].textContent;
+                    let matchSearch = input === "" || nama.includes(input) || marketingCode.includes(input);
+                let matchPosition = position === "" || pos.includes(position);
+                let matchBranch = branch === "" || br === branch;
+                let matchPeriode = periode === "" || per === periode;
+                row.style.display = (matchSearch && matchPosition && matchBranch && matchPeriode) ? '' : 'none';
+
+            }
+    }
+
+    document.getElementById('searchBox').addEventListener('keyup', filterAndSearchTable);
+    document.getElementById('positionFilter').addEventListener('change', filterAndSearchTable);
+    document.getElementById('branchFilter').addEventListener('change', filterAndSearchTable);
+    document.getElementById('periodeFilter').addEventListener('change', filterAndSearchTable);
+       
+        function resetFilter() {
+            document.getElementById('searchBox').value = "";
+            document.getElementById('periodeFilter').value = "";
+            document.getElementById('positionFilter').value = "";
+            document.getElementById('branchFilter').value = "";
+          
+            const rows = document.getElementById('tableBody').getElementsByTagName('tr');
+        for (let row of rows) {
+            row.style.display = '';
+        }
+    }
+        
+    </script>
+</body>
+</html>
