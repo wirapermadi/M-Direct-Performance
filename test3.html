@@ -5,6 +5,31 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
     <style>
+
+        .date-container {
+            text-align: left;
+            background: transparent;
+            color: rgb(3, 3, 3);
+            border: none;
+            padding: 10px 15px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        
+        .date-container label {
+            margin-right: 10px;
+        }
+        
+        #datePicker {
+            padding: 8px;
+            font-size: 14px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        
+
         body {
             font-family: Arial, sans-serif;
             text-align: center;
@@ -15,28 +40,34 @@
         .container {
             width: 100%;
             max-width: 100%;
-            margin: auto;
+            margin: 0;
             background: #fff;
-            padding: 20px;
+            padding: 10px;
             border-radius: 10px;
             box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            overflow-x: hidden;
         }
+
 
         .header-container {
             display: flex;
-            flex-direction: column; /* Agar logo dan teks bertumpuk */
-            align-items: center; /* Memusatkan elemen ke tengah */
-            background-color: purple; /* Warna latar belakang */
-            color: white; /* Warna teks */
-            padding: 20px; /* Memberikan ruang di sekitar */
+            flex-direction: column;
+            align-items: center;
+            background-color: purple;
+            color: white;
+            padding: 20px;
             border-radius: 8px;
             text-align: center;
         }
 
+        .h1 {
+            margin:0cm;
+        }
+
         .logo {
-            max-width: 180px; /* Ukuran maksimum logo */
-            height: auto; /* Menjaga aspek rasio */
-            margin-bottom: 10px; /* Jarak antara logo dan teks */
+            max-width: 180px;
+            height: auto;
+            margin-bottom: 1px;
         }
 
         h2 {
@@ -45,6 +76,26 @@
             padding: 10px;
             border-radius: 5px;
         }
+
+        #filterContainer {
+            display: block; /* Default tampil */
+            transition: all 0.3s ease;
+        }
+        
+        #toggleFilter {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            cursor: pointer;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+        
+        #toggleFilter:hover {
+            background: #0056b3;
+        }
+        
 
         .filter-container {
             display: flex;
@@ -55,17 +106,19 @@
             padding: 15px;
             background: #f1f1f1;
             border-radius: 8px;
-            margin-bottom: 20px;
+            margin-bottom: 10px;
         }
 
-        input, select {
-            flex: 1;
+        input[type="text"], select {
+            width: 100%; 
+            max-width: 300px; /* Sesuaikan max-width sesuai kebutuhan */
             padding: 10px;
+            margin: 5px 0;
             border: 1px solid #ccc;
             border-radius: 5px;
-            font-size: 14px;
+            box-sizing: border-box; /* Biar padding tidak mempengaruhi ukuran total */
         }
-
+        
         .reset-btn {
             background: #dc3545;
             color: white;
@@ -76,58 +129,73 @@
             font-weight: bold;
         }
 
+        .table-container {
+            overflow-x: auto;
+            width: 100%;
+        }
+
         table {
             width: 100%;
+            max-width: 100%;
             border-collapse: collapse;
-            margin-top: 10px;
-        }
-
-        th {
-            border: 1px solid #ddd;
-            padding: 10px;
+            margin-top: 1px;
             text-align: center;
-            font-size: 14px;
+            overflow-x: auto;     
+        }
+        
+        th, td {
+            padding: 8px;
+            border: 1px solid #ddd;
+            text-align: center; 
         }
 
+        td {
+            padding: 8px;
+            border: 1px solid #ddd;
+            text-align: left; 
+            white-space: nowrap;
+        }
+
+        table td:nth-child(n+6){ 
+            text-align: center;
+        }
+      
         th {
             background-color: #007bff;
             color: white;
-        }
- 
-        td {
-            border: 1px solid #ddd;
-            padding: 10px;
-            text-align: left;
-            font-size: 14px;
-        }
-
-        td:nth-child(n+6) {
-            text-align: center; 
-            vertical-align: middle; 
-        }
-
-        tr:nth-child(even) {
-            background-color: #f9f9f9;
+            text-align: center;
         }
 
         .highlight-yes {
-            color: rgb(0, 255, 76);
+            color: #71f28f;
             font-weight: bold;
         }
 
         .highlight-no {
-            color: rgb(255, 0, 0);
+            color: #d65f6b;
+            font-weight: bold;
+        }
+
+        .highlight-red {
+            color: #d65f6b;
+            font-weight: bold;
+        }
+
+        .print-btn {
+            text-align: left;
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            cursor: pointer;
+            border-radius: 5px;
             font-weight: bold;
         }
 
         @media (max-width: 768px) {
             .logo {
-                width: 20vw; /* Ukuran logo lebih kecil */
+                width: 20vw;
                 max-width: 140px;
-            }
-
-            h2 {
-                font-size: 3vw; /* Ukuran teks lebih besar untuk keterbacaan */
             }
 
             .filter-container {
@@ -138,77 +206,80 @@
                 width: 100%;
             }
         }
-
-        @media (max-width: 480px) {
-            .logo {
-                width: 30vw; /* Ukuran lebih besar relatif terhadap layar kecil */
-                max-width: 120px;
-            }
-
-            h2 {
-                font-size: 4vw; /* Ukuran teks lebih besar agar tetap terbaca */
-            }
-        }
-
     </style>
 </head>
 <body>
+    <div class="date-container">
+        <p><b>Date:</b> <span id="currentDate"></span></p>
+    </div>
+    
     <div class="container">
         <h1>
-            <img src="img\logo_mdirect.png" alt="Bank Muamalat Logo" class="logo">
+            <img src="img/logo_mdirect.png" alt="Bank Muamalat Logo" class="logo">
         </h1>
 
         <h2>Employee's M-Direct Performances</h2>
 
         <div class="filter-container">
-            <input type="file" id="fileInput" accept=".xlsx, .xls">
-            <input type="text" id="searchBox" placeholder="Name or Marketing Code..." onkeyup="searchTable()">
-            <select id="positionFilter" onchange="filterTable()">
+            <input type="text" id="searchBox" placeholder="Name or Marketing Code..." onkeyup="filterAndSearchTable()">
+            <select id="positionFilter" onchange="filterAndSearchTable()">
                 <option value="">All Position</option>
                 <option value="RM">RM</option>
                 <option value="CS">CS</option>
                 <option value="BM">BM</option>
             </select>
-            <select id="branchFilter" onchange="filterTable()">
+            <select id="branchFilter" onchange="filterAndSearchTable()">
                 <option value="">All Branch</option>
             </select>
-            <select id="periodeFilter" onchange="filterTable()">
+            <select id="periodeFilter" onchange="filterAndSearchTable()">
                 <option value="">All Period</option>
             </select>
             <button class="reset-btn" onclick="resetFilter()">Reset</button>
         </div>
 
-        <table id="dataTable">
-            <thead>
-                <tr id="tableHead"></tr>
-            </thead>
-            <tbody id="tableBody"></tbody>
-        </table>
+        <div class="table-container">
+            <table id="dataTable">
+                <thead>
+                    <tr id="tableHead"></tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+        <button class="print-btn" onclick="printTable()">Print / Save PDF</button>
     </div>
 
     <script>
-        let tableData = [];
 
-        document.getElementById('fileInput').addEventListener('change', function(event) {
-            const file = event.target.files[0];
-            const reader = new FileReader();
-
-            reader.onload = function(e) {
-                const data = new Uint8Array(e.target.result);
-                const workbook = XLSX.read(data, { type: 'array' });
-                const sheet = workbook.Sheets[workbook.SheetNames[0]];
-                const jsonData = XLSX.utils.sheet_to_json(sheet, { header: 1 });
-                populateTable(jsonData);
-            };
-
-            reader.readAsArrayBuffer(file);
+        document.addEventListener("DOMContentLoaded", function() {
+            let today = new Date();
+            let formattedDate = today.toLocaleDateString("id-ID", { 
+                year: "numeric", 
+                month: "long", 
+                day: "numeric" 
+            });
+            document.getElementById("currentDate").textContent = formattedDate;
         });
+        
+        let tableData = [];
+        fetch('Dataset.json')
+            .then(response => response.json())
+            .then(data => populateTable(data))
+            .catch(error => console.error('Error loading JSON:', error));
+
+            document.getElementById("toggleFilter").addEventListener("click", function() {
+                let filter = document.getElementById("filterContainer");
+                if (filter.style.display === "none") {
+                    filter.style.display = "block"; 
+                } else {
+                    filter.style.display = "none"; }
+            });
 
         function populateTable(data) {
             const tableHead = document.getElementById('tableHead');
             const tableBody = document.getElementById('tableBody');
             const branchFilter = document.getElementById('branchFilter');
             const periodeFilter = document.getElementById('periodeFilter');
+            
             tableHead.innerHTML = '';
             tableBody.innerHTML = '';
             tableData = [];
@@ -216,92 +287,95 @@
             let periods = new Set();
 
             if (data.length > 0) {
-                data[0].forEach(header => {
+                Object.keys(data[0]).forEach(header => {
                     let th = document.createElement('th');
                     th.textContent = header;
                     tableHead.appendChild(th);
                 });
 
-                
-
-                data.slice(1).forEach(row => {
+                data.forEach(row => {
                     let tr = document.createElement('tr');
-                    let rowData = {};
-                    row.forEach((cell, index) => {
+                    Object.values(row).forEach(cell => {
                         let td = document.createElement('td');
                         td.textContent = cell;
                         tr.appendChild(td);
-                        rowData[data[0][index]] = cell;
-                });
+                    });
 
-                let lastCell = tr.cells[tr.cells.length - 1];
-                if (lastCell.textContent === "Y") {
-                    lastCell.classList.add("highlight-yes");
-                } else if (lastCell.textContent === "N") {
-                    lastCell.classList.add("highlight-no");
-                }
-                
+                    let lastCell = tr.cells[tr.cells.length - 1];
+                    if (lastCell.textContent === "Y") lastCell.classList.add("highlight-yes");
+                    else if (lastCell.textContent === "N") lastCell.classList.add("highlight-no");
+
+                    let loginMTDCell = tr.cells[5];  
+                    if (loginMTDCell.textContent === "0") {
+                        loginMTDCell.classList.add("highlight-red");
+                    }
+        
+                    let loginDTDCell = tr.cells[6];  
+                    if (loginDTDCell.textContent === "N") {
+                        loginDTDCell.classList.add("highlight-red");
+                    }
+
                     tableBody.appendChild(tr);
-                    tableData.push(rowData);
-                    branches.add(rowData['Main Branch']);
-                    periods.add(rowData['Periode']);
+                    tableData.push(row);
+                    branches.add(row['Main Branch']);
+                    periods.add(row['Periode']);
                 });
-            }
-            
-            branchFilter.innerHTML = '<option value="">Semua Branch</option>';
-            branches.forEach(branch => {
-                let option = document.createElement('option');
-                option.value = branch;
-                option.textContent = branch;
-                branchFilter.appendChild(option);
-            });
 
-            periodeFilter.innerHTML = '<option value="">Semua Periode</option>';
-            periods.forEach(period => {
+                updateFilterOptions(branchFilter, branches);
+                updateFilterOptions(periodeFilter, periods);
+            }
+        }
+
+        function updateFilterOptions(filterElement, values) {
+            filterElement.innerHTML = '<option value="">All</option>';
+            values.forEach(value => {
                 let option = document.createElement('option');
-                option.value = period;
-                option.textContent = period;
-                periodeFilter.appendChild(option);
+                option.value = value;
+                option.textContent = value;
+                filterElement.appendChild(option);
             });
         }
 
         function filterAndSearchTable() {
-                const input = document.getElementById('searchBox').value.toLowerCase();
-            const position = document.getElementById('positionFilter').value;
-            const branch = document.getElementById('branchFilter').value;
-            const periode = document.getElementById('periodeFilter').value;
-            const rows = document.getElementById('tableBody').getElementsByTagName('tr');
-            for (let row of rows) {
-                    let nama = row.cells[2].textContent.toLowerCase();
-                    let marketingCode = row.cells[1].textContent.toLowerCase();
-                    let pos = row.cells[3].textContent;
-                    let br = row.cells[4].textContent;
-                    let per = row.cells[0].textContent;
-                    let matchSearch = input === "" || nama.includes(input) || marketingCode.includes(input);
-                let matchPosition = position === "" || pos.includes(position);
-                let matchBranch = branch === "" || br === branch;
-                let matchPeriode = periode === "" || per === periode;
-                row.style.display = (matchSearch && matchPosition && matchBranch && matchPeriode) ? '' : 'none';
+            const searchValue = document.getElementById('searchBox').value.toLowerCase();
+            const positionValue = document.getElementById('positionFilter').value.toLowerCase();
+            const branchValue = document.getElementById('branchFilter').value.toLowerCase();
+            const periodeValue = document.getElementById('periodeFilter').value.toLowerCase();
 
-            }
-    }
+            document.getElementById('tableBody').querySelectorAll('tr').forEach(row => {
+                let cells = row.getElementsByTagName('td');
 
-    document.getElementById('searchBox').addEventListener('keyup', filterAndSearchTable);
-    document.getElementById('positionFilter').addEventListener('change', filterAndSearchTable);
-    document.getElementById('branchFilter').addEventListener('change', filterAndSearchTable);
-    document.getElementById('periodeFilter').addEventListener('change', filterAndSearchTable);
-       
+                let nameMarketingMatch = searchValue === "" || 
+                                         cells[1].textContent.toLowerCase().includes(searchValue) || 
+                                         cells[2].textContent.toLowerCase().includes(searchValue);
+
+                let positionMatch = positionValue === "" || cells[3].textContent.trim().toLowerCase().includes(positionValue);
+                let branchMatch = branchValue === "" || cells[4].textContent.toLowerCase() === branchValue;
+                let periodeMatch = periodeValue === "" || cells[0].textContent.toLowerCase() === periodeValue;
+
+                if (nameMarketingMatch && positionMatch && branchMatch && periodeMatch) {
+                    row.style.display = "";
+                } else {
+                    row.style.display = "none";
+                }
+            });
+        }
         function resetFilter() {
             document.getElementById('searchBox').value = "";
-            document.getElementById('periodeFilter').value = "";
             document.getElementById('positionFilter').value = "";
             document.getElementById('branchFilter').value = "";
-          
-            const rows = document.getElementById('tableBody').getElementsByTagName('tr');
-        for (let row of rows) {
-            row.style.display = '';
+            document.getElementById('periodeFilter').value = "";
+            filterAndSearchTable();
         }
-    }
+
+        function printTable() {
+            let tableContent = document.getElementById("dataTable").outerHTML;
+            let originalContent = document.body.innerHTML;
+        
+            document.body.innerHTML = "<h2>Employee's M-Direct Performances</h2>" + tableContent; 
+            window.print(); 
+            document.body.innerHTML = originalContent; 
+        }
         
     </script>
 </body>
